@@ -1,11 +1,10 @@
-mod app;
+mod rs_app;
 mod style;
-mod ui;
 
 use std::{error::Error, io};
 
-use crate::app::App;
-use crate::ui::ui;
+use crate::rs_app::app::App;
+use crate::rs_app::ui::ui;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,

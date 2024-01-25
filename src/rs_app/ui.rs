@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::rs_app::app::App;
 use crate::style::INFO_TEXT;
 use ratatui::{
     prelude::*,
