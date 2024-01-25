@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ratatui = "0.26.0-alpha.2"
+ratatui = "0.26.0-alpha"
 crossterm = "0.27"
 clap = { version = "4", features = ["cargo"] }
 thiserror = "1"
