@@ -1,4 +1,3 @@
-use crate::app;
 use crate::app::App;
 use ratatui::{
     prelude::*,
@@ -7,6 +6,44 @@ use ratatui::{
         ScrollbarOrientation, Table,
     },
 };
+use style::palette::tailwind;
+
+pub const PALETTES: [tailwind::Palette; 4] = [
+    tailwind::RED,
+    tailwind::BLUE,
+    tailwind::EMERALD,
+    tailwind::INDIGO,
+];
+pub const INFO_TEXT: &str =
+    "(Esc) quit | (↑) move up | (↓) move down | (→) next color | (←) previous color";
+
+pub const ITEM_HEIGHT: usize = 4;
+
+pub struct TableColors {
+    pub(crate) buffer_bg: Color,
+    pub(crate) header_bg: Color,
+    pub(crate) header_fg: Color,
+    pub(crate) row_fg: Color,
+    pub(crate) selected_style_fg: Color,
+    pub(crate) normal_row_color: Color,
+    pub(crate) alt_row_color: Color,
+    pub(crate) footer_border_color: Color,
+}
+
+impl TableColors {
+    pub const fn new(color: &tailwind::Palette) -> Self {
+        Self {
+            buffer_bg: tailwind::SLATE.c950,
+            header_bg: color.c900,
+            header_fg: tailwind::SLATE.c200,
+            row_fg: tailwind::SLATE.c200,
+            selected_style_fg: color.c400,
+            normal_row_color: tailwind::SLATE.c950,
+            alt_row_color: tailwind::SLATE.c900,
+            footer_border_color: color.c400,
+        }
+    }
+}
 
 pub fn ui(f: &mut Frame, app: &mut App) {
     let rects = Layout::vertical([Constraint::Min(5), Constraint::Length(3)]).split(f.size());
@@ -88,7 +125,7 @@ fn render_scrollbar(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_footer(f: &mut Frame, app: &App, area: Rect) {
-    let info_footer = Paragraph::new(Line::from(app::INFO_TEXT))
+    let info_footer = Paragraph::new(Line::from(INFO_TEXT))
         .style(Style::new().fg(app.colors.row_fg).bg(app.colors.buffer_bg))
         .alignment(Alignment::Center)
         .block(

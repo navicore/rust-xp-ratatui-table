@@ -1,47 +1,8 @@
+use crate::ui::TableColors;
+use crate::ui::PALETTES;
 use itertools::Itertools;
-use ratatui::{
-    prelude::*,
-    widgets::{ScrollbarState, TableState},
-};
-use style::palette::tailwind;
+use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
-
-const PALETTES: [tailwind::Palette; 4] = [
-    tailwind::RED,
-    tailwind::BLUE,
-    tailwind::EMERALD,
-    tailwind::INDIGO,
-];
-pub const INFO_TEXT: &str =
-    "(Esc) quit | (↑) move up | (↓) move down | (→) next color | (←) previous color";
-
-const ITEM_HEIGHT: usize = 4;
-
-pub struct TableColors {
-    pub(crate) buffer_bg: Color,
-    pub(crate) header_bg: Color,
-    pub(crate) header_fg: Color,
-    pub(crate) row_fg: Color,
-    pub(crate) selected_style_fg: Color,
-    pub(crate) normal_row_color: Color,
-    pub(crate) alt_row_color: Color,
-    pub(crate) footer_border_color: Color,
-}
-
-impl TableColors {
-    const fn new(color: &tailwind::Palette) -> Self {
-        Self {
-            buffer_bg: tailwind::SLATE.c950,
-            header_bg: color.c900,
-            header_fg: tailwind::SLATE.c200,
-            row_fg: tailwind::SLATE.c200,
-            selected_style_fg: color.c400,
-            normal_row_color: tailwind::SLATE.c950,
-            alt_row_color: tailwind::SLATE.c900,
-            footer_border_color: color.c400,
-        }
-    }
-}
 
 pub struct Data {
     replicaset: String,
@@ -50,6 +11,7 @@ pub struct Data {
     pods: String,
     containers: String,
 }
+use crate::ui::ITEM_HEIGHT;
 
 impl Data {
     pub(crate) const fn ref_array(&self) -> [&String; 5] {
