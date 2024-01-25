@@ -1,5 +1,5 @@
-use crate::ui::TableColors;
-use crate::ui::PALETTES;
+use crate::style::TableColors;
+use crate::style::PALETTES;
 use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
@@ -11,7 +11,7 @@ pub struct Data {
     pods: String,
     containers: String,
 }
-use crate::ui::ITEM_HEIGHT;
+use crate::style::ITEM_HEIGHT;
 
 impl Data {
     pub(crate) const fn ref_array(&self) -> [&String; 5] {

@@ -1,4 +1,5 @@
 mod app;
+mod style;
 mod ui;
 
 use std::{error::Error, io};
