@@ -178,8 +178,8 @@ fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16, u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::app::constraint_len_calculator;
-    use crate::app::Data;
+    use crate::rs_app::app::constraint_len_calculator;
+    use crate::rs_app::app::Data;
 
     #[test]
     fn test_constraint_len_calculator() {
