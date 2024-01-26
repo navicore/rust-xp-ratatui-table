@@ -1,30 +1,30 @@
-use crate::style::TableColors;
-use crate::style::PALETTES;
+use crate::tui::style::{TableColors, ITEM_HEIGHT, PALETTES};
 use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Clone, Debug)]
 pub struct Data {
-    podname: String,
+    replicaset: String,
     description: String,
     age: String,
+    pods: String,
     containers: String,
 }
-use crate::style::ITEM_HEIGHT;
 
 impl Data {
-    pub(crate) const fn ref_array(&self) -> [&String; 4] {
+    pub(crate) const fn ref_array(&self) -> [&String; 5] {
         [
-            &self.podname,
+            &self.replicaset,
             &self.description,
             &self.age,
+            &self.pods,
             &self.containers,
         ]
     }
 
-    fn podname(&self) -> &str {
-        &self.podname
+    fn replicaset(&self) -> &str {
+        &self.replicaset
     }
 
     fn description(&self) -> &str {
@@ -33,6 +33,10 @@ impl Data {
 
     fn age(&self) -> &str {
         &self.age
+    }
+
+    fn pods(&self) -> &str {
+        &self.pods
     }
 
     fn containers(&self) -> &str {
@@ -44,7 +48,7 @@ impl Data {
 pub struct App {
     pub(crate) state: TableState,
     pub(crate) items: Vec<Data>,
-    pub(crate) longest_item_lens: (u16, u16, u16, u16),
+    pub(crate) longest_item_lens: (u16, u16, u16, u16, u16),
     pub(crate) scroll_state: ScrollbarState,
     pub(crate) colors: TableColors,
     color_index: usize,
@@ -52,13 +56,13 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let data_vec = generate_fake_podnames();
+        let data_vec = generate_fake_replicasets();
         Self {
             state: TableState::default().with_selected(0),
             longest_item_lens: constraint_len_calculator(&data_vec),
             scroll_state: ScrollbarState::new((data_vec.len() - 1) * ITEM_HEIGHT),
             colors: TableColors::new(&PALETTES[0]),
-            color_index: 1,
+            color_index: 0,
             items: data_vec,
         }
     }
@@ -101,32 +105,34 @@ impl App {
     }
 }
 
-fn generate_fake_podnames() -> Vec<Data> {
+fn generate_fake_replicasets() -> Vec<Data> {
     use fakeit::generator;
 
     (0..20)
         .map(|_| {
-            let podname = generator::generate("replica###-??#?#?##-??#?#?#".to_string());
-            let description = "Deployment Pod".to_string();
+            let replicaset = generator::generate("replica###-??#?#?##".to_string());
+            let description = "Deployment".to_string();
             let age = "200d".to_string();
-            let containers = "2/2".to_string();
+            let pods = "4/4".to_string();
+            let containers = "8/8".to_string();
 
             Data {
-                podname,
+                replicaset,
                 description,
                 age,
+                pods,
                 containers,
             }
         })
-        .sorted_by(|a, b| a.podname.cmp(&b.podname))
+        .sorted_by(|a, b| a.replicaset.cmp(&b.replicaset))
         .collect_vec()
 }
 
 #[allow(clippy::cast_possible_truncation)]
-fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16) {
-    let podname_len = items
+fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16, u16) {
+    let replicaset_len = items
         .iter()
-        .map(Data::podname)
+        .map(Data::replicaset)
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
@@ -143,6 +149,12 @@ fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16) {
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
+    let pods_len = items
+        .iter()
+        .map(Data::pods)
+        .map(UnicodeWidthStr::width)
+        .max()
+        .unwrap_or(0);
     let containers_len = items
         .iter()
         .map(Data::containers)
@@ -151,40 +163,49 @@ fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16) {
         .unwrap_or(0);
 
     (
-        podname_len as u16,
+        replicaset_len as u16,
         description_len as u16,
         age_len as u16,
+        pods_len as u16,
         containers_len as u16,
     )
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::pod_app::app::constraint_len_calculator;
-    use crate::pod_app::app::Data;
+    use crate::tui::rs_app::app::constraint_len_calculator;
+    use crate::tui::rs_app::app::Data;
 
     #[test]
     fn test_constraint_len_calculator() {
         let test_data = vec![
             Data {
-                podname: "myreplica-123456-123456".to_string(),
+                replicaset: "myreplica-123456".to_string(),
                 description: "Deployment".to_string(),
-                age: "150d".to_string(),
-                containers: "2/2".to_string(),
+                age: "300d".to_string(),
+                pods: "10/10".to_string(),
+                containers: "19/30".to_string(),
             },
             Data {
-                podname: "myreplica-923450-987654".to_string(),
+                replicaset: "myreplica-923450".to_string(),
                 description: "Deployment".to_string(),
                 age: "10d".to_string(),
+                pods: "1/1".to_string(),
                 containers: "2/2".to_string(),
             },
         ];
-        let (longest_podname_len, longest_description_len, longest_age_len, longest_containers_len) =
-            constraint_len_calculator(&test_data);
+        let (
+            longest_replicaset_len,
+            longest_description_len,
+            longest_age_len,
+            longest_pods_len,
+            longest_containers_len,
+        ) = constraint_len_calculator(&test_data);
 
-        assert_eq!(23, longest_podname_len);
+        assert_eq!(16, longest_replicaset_len);
         assert_eq!(10, longest_description_len);
         assert_eq!(4, longest_age_len);
-        assert_eq!(3, longest_containers_len);
+        assert_eq!(5, longest_pods_len);
+        assert_eq!(5, longest_containers_len);
     }
 }

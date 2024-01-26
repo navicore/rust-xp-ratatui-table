@@ -1,5 +1,5 @@
-use crate::pod_app::app::App;
-use crate::style::INFO_TEXT;
+use crate::tui::pod_app::app::App;
+use crate::tui::style::INFO_TEXT;
 use ratatui::{
     prelude::*,
     widgets::{
