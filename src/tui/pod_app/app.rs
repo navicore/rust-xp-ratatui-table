@@ -1,47 +1,12 @@
 use crate::tui::style::{TableColors, ITEM_HEIGHT, PALETTES};
-use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
-
-#[derive(Clone, Debug)]
-pub struct Data {
-    podname: String,
-    description: String,
-    age: String,
-    containers: String,
-}
-
-impl Data {
-    pub(crate) const fn ref_array(&self) -> [&String; 4] {
-        [
-            &self.podname,
-            &self.description,
-            &self.age,
-            &self.containers,
-        ]
-    }
-
-    fn podname(&self) -> &str {
-        &self.podname
-    }
-
-    fn description(&self) -> &str {
-        &self.description
-    }
-
-    fn age(&self) -> &str {
-        &self.age
-    }
-
-    fn containers(&self) -> &str {
-        &self.containers
-    }
-}
+use crate::tui::data::{generate_pod_recs, Pod};
 
 #[derive(Clone, Debug)]
 pub struct App {
     pub(crate) state: TableState,
-    pub(crate) items: Vec<Data>,
+    pub(crate) items: Vec<Pod>,
     pub(crate) longest_item_lens: (u16, u16, u16, u16),
     pub(crate) scroll_state: ScrollbarState,
     pub(crate) colors: TableColors,
@@ -50,7 +15,7 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        let data_vec = generate_fake_podnames();
+        let data_vec = generate_pod_recs();
         Self {
             state: TableState::default().with_selected(0),
             longest_item_lens: constraint_len_calculator(&data_vec),
@@ -99,57 +64,37 @@ impl App {
     }
 }
 
-fn generate_fake_podnames() -> Vec<Data> {
-    use fakeit::generator;
-
-    (0..20)
-        .map(|_| {
-            let podname = generator::generate("replica###-??#?#?##-??#?#?#".to_string());
-            let description = "Deployment Pod".to_string();
-            let age = "200d".to_string();
-            let containers = "2/2".to_string();
-
-            Data {
-                podname,
-                description,
-                age,
-                containers,
-            }
-        })
-        .sorted_by(|a, b| a.podname.cmp(&b.podname))
-        .collect_vec()
-}
 
 #[allow(clippy::cast_possible_truncation)]
-fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16) {
-    let podname_len = items
+fn constraint_len_calculator(items: &[Pod]) -> (u16, u16, u16, u16) {
+    let pod_name_len = items
         .iter()
-        .map(Data::podname)
+        .map(Pod::podname)
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
     let description_len = items
         .iter()
-        .map(Data::description)
+        .map(Pod::description)
         .flat_map(str::lines)
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
     let age_len = items
         .iter()
-        .map(Data::age)
+        .map(Pod::age)
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
     let containers_len = items
         .iter()
-        .map(Data::containers)
+        .map(Pod::containers)
         .map(UnicodeWidthStr::width)
         .max()
         .unwrap_or(0);
 
     (
-        podname_len as u16,
+        pod_name_len as u16,
         description_len as u16,
         age_len as u16,
         containers_len as u16,
@@ -159,28 +104,28 @@ fn constraint_len_calculator(items: &[Data]) -> (u16, u16, u16, u16) {
 #[cfg(test)]
 mod tests {
     use crate::tui::pod_app::app::constraint_len_calculator;
-    use crate::tui::pod_app::app::Data;
+    use crate::tui::pod_app::app::Pod;
 
     #[test]
     fn test_constraint_len_calculator() {
         let test_data = vec![
-            Data {
-                podname: "myreplica-123456-123456".to_string(),
+            Pod {
+                name: "replica-123456-123456".to_string(),
                 description: "Deployment".to_string(),
                 age: "150d".to_string(),
                 containers: "2/2".to_string(),
             },
-            Data {
-                podname: "myreplica-923450-987654".to_string(),
+            Pod {
+                name: "replica-923450-987654".to_string(),
                 description: "Deployment".to_string(),
                 age: "10d".to_string(),
                 containers: "2/2".to_string(),
             },
         ];
-        let (longest_podname_len, longest_description_len, longest_age_len, longest_containers_len) =
+        let (longest_pod_name_len, longest_description_len, longest_age_len, longest_containers_len) =
             constraint_len_calculator(&test_data);
 
-        assert_eq!(23, longest_podname_len);
+        assert_eq!(21, longest_pod_name_len);
         assert_eq!(10, longest_description_len);
         assert_eq!(4, longest_age_len);
         assert_eq!(3, longest_containers_len);

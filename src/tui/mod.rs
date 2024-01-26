@@ -2,6 +2,9 @@ mod container_app;
 mod pod_app;
 mod rs_app;
 mod style;
+mod table_ui;
+mod data;
+
 use std::rc::Rc;
 use std::{error::Error, io};
 
