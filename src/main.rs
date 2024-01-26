@@ -1,10 +1,10 @@
+mod container_app;
+mod pod_app;
 mod rs_app;
 mod style;
-
+use std::rc::Rc;
 use std::{error::Error, io};
 
-use crate::rs_app::app::App;
-use crate::rs_app::ui::ui;
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
@@ -20,9 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // create app and run it
-    let app = App::new();
-    let res = run_app(&mut terminal, app);
+    let res = run_app(&mut terminal);
 
     // restore terminal
     disable_raw_mode()?;
@@ -40,20 +38,87 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
-    loop {
-        terminal.draw(|f| ui(f, &mut app))?;
+#[derive(Clone, Debug)]
+enum Apps {
+    RsApp { app: rs_app::app::App },
+    PodApp { app: pod_app::app::App },
+    ContainerApp { app: container_app::app::App },
+}
 
-        if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                use KeyCode::{Char, Down, Esc, Left, Right, Up};
-                match key.code {
-                    Char('q') | Esc => return Ok(()),
-                    Char('j') | Down => app.next(),
-                    Char('k') | Up => app.previous(),
-                    Char('l') | Right => app.next_color(),
-                    Char('h') | Left => app.previous_color(),
-                    _ => {}
+fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+    let mut app_holder = Apps::RsApp {
+        app: rs_app::app::App::new(),
+    };
+    let mut history: Vec<Rc<Apps>> = Vec::new();
+    loop {
+        match &mut app_holder {
+            Apps::RsApp { app: rs_app } => {
+                terminal.draw(|f| rs_app::ui::ui(f, &mut rs_app.clone()))?;
+                if let Event::Key(key) = event::read()? {
+                    if key.kind == KeyEventKind::Press {
+                        use KeyCode::{Char, Down, Enter, Up};
+                        match key.code {
+                            Char('q') => return Ok(()),
+                            Char('j') | Down => rs_app.next(),
+                            Char('k') | Up => rs_app.previous(),
+                            Char('c' | 'C') => rs_app.next_color(),
+                            Enter => {
+                                let new_app_holder = Apps::PodApp {
+                                    app: pod_app::app::App::new(),
+                                };
+                                history.push(Rc::new(app_holder.clone())); // Save current state
+                                app_holder = new_app_holder;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            Apps::PodApp { app: pod_app } => {
+                terminal.draw(|f| pod_app::ui::ui(f, &mut pod_app.clone()))?;
+                if let Event::Key(key) = event::read()? {
+                    if key.kind == KeyEventKind::Press {
+                        use KeyCode::{Char, Down, Enter, Esc, Up};
+                        match key.code {
+                            Char('q') => return Ok(()),
+                            Char('j') | Down => pod_app.next(),
+                            Char('k') | Up => pod_app.previous(),
+                            Char('c' | 'C') => pod_app.next_color(),
+                            Enter => {
+                                let new_app_holder = Apps::ContainerApp {
+                                    app: container_app::app::App::new(),
+                                };
+                                history.push(Rc::new(app_holder.clone())); // Save current state
+                                app_holder = new_app_holder;
+                            }
+                            Esc => {
+                                if let Some(previous_app) = history.pop() {
+                                    app_holder = (*previous_app).clone();
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            Apps::ContainerApp { app: container_app } => {
+                terminal.draw(|f| container_app::ui::ui(f, &mut container_app.clone()))?;
+                if let Event::Key(key) = event::read()? {
+                    if key.kind == KeyEventKind::Press {
+                        use KeyCode::{Char, Down, Esc, Up};
+                        match key.code {
+                            Char('q') => return Ok(()),
+                            Char('j') | Down => container_app.next(),
+                            Char('k') | Up => container_app.previous(),
+                            Char('c' | 'C') => container_app.next_color(),
+                            Esc => {
+                                if let Some(previous_app) = history.pop() {
+                                    app_holder = (*previous_app).clone();
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
         }
