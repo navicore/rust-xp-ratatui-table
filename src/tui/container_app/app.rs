@@ -1,5 +1,4 @@
-use crate::style::TableColors;
-use crate::style::PALETTES;
+use crate::tui::style::{TableColors, ITEM_HEIGHT, PALETTES};
 use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
@@ -9,7 +8,6 @@ pub struct Data {
     container: String,
     description: String,
 }
-use crate::style::ITEM_HEIGHT;
 
 impl Data {
     pub(crate) const fn ref_array(&self) -> [&String; 2] {
@@ -124,8 +122,8 @@ fn constraint_len_calculator(items: &[Data]) -> (u16, u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::container_app::app::constraint_len_calculator;
-    use crate::container_app::app::Data;
+    use crate::tui::container_app::app::constraint_len_calculator;
+    use crate::tui::container_app::app::Data;
 
     #[test]
     fn test_constraint_len_calculator() {
