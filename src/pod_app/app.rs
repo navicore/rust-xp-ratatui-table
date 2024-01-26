@@ -107,7 +107,7 @@ fn generate_fake_podnames() -> Vec<Data> {
     (0..20)
         .map(|_| {
             let podname = generator::generate("replica###-??#?#?##-??#?#?#".to_string());
-            let description = "Deployment".to_string();
+            let description = "Deployment Pod".to_string();
             let age = "200d".to_string();
             let containers = "2/2".to_string();
 
