@@ -8,10 +8,11 @@ pub const PALETTES: [tailwind::Palette; 4] = [
     tailwind::INDIGO,
 ];
 pub const INFO_TEXT: &str =
-    "(Esc) quit | (↑) move up | (↓) move down | (→) next color | (←) previous color";
+    "(q) quit | (Esc) previous | (↑) move up | (↓) move down | (c) next color";
 
 pub const ITEM_HEIGHT: usize = 4;
 
+#[derive(Clone, Debug)]
 pub struct TableColors {
     pub(crate) buffer_bg: Color,
     pub(crate) header_bg: Color,
