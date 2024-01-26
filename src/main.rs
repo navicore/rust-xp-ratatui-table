@@ -40,19 +40,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 #[derive(Clone, Debug)]
 enum Apps {
-    RsApp { app: rs_app::app::App },
-    PodApp { app: pod_app::app::App },
-    ContainerApp { app: container_app::app::App },
+    Rs { app: rs_app::app::App },
+    Pod { app: pod_app::app::App },
+    Container { app: container_app::app::App },
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
-    let mut app_holder = Apps::RsApp {
+    let mut app_holder = Apps::Rs {
         app: rs_app::app::App::new(),
     };
     let mut history: Vec<Rc<Apps>> = Vec::new();
     loop {
         match &mut app_holder {
-            Apps::RsApp { app: rs_app } => {
+            Apps::Rs { app: rs_app } => {
                 terminal.draw(|f| rs_app::ui::ui(f, &mut rs_app.clone()))?;
                 if let Event::Key(key) = event::read()? {
                     if key.kind == KeyEventKind::Press {
@@ -63,7 +63,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                             Char('k') | Up => rs_app.previous(),
                             Char('c' | 'C') => rs_app.next_color(),
                             Enter => {
-                                let new_app_holder = Apps::PodApp {
+                                let new_app_holder = Apps::Pod {
                                     app: pod_app::app::App::new(),
                                 };
                                 history.push(Rc::new(app_holder.clone())); // Save current state
@@ -74,7 +74,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                     }
                 }
             }
-            Apps::PodApp { app: pod_app } => {
+            Apps::Pod { app: pod_app } => {
                 terminal.draw(|f| pod_app::ui::ui(f, &mut pod_app.clone()))?;
                 if let Event::Key(key) = event::read()? {
                     if key.kind == KeyEventKind::Press {
@@ -85,7 +85,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                             Char('k') | Up => pod_app.previous(),
                             Char('c' | 'C') => pod_app.next_color(),
                             Enter => {
-                                let new_app_holder = Apps::ContainerApp {
+                                let new_app_holder = Apps::Container {
                                     app: container_app::app::App::new(),
                                 };
                                 history.push(Rc::new(app_holder.clone())); // Save current state
@@ -101,7 +101,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                     }
                 }
             }
-            Apps::ContainerApp { app: container_app } => {
+            Apps::Container { app: container_app } => {
                 terminal.draw(|f| container_app::ui::ui(f, &mut container_app.clone()))?;
                 if let Event::Key(key) = event::read()? {
                     if key.kind == KeyEventKind::Press {
