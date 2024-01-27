@@ -2,6 +2,7 @@ use crate::tui::style::{TableColors, ITEM_HEIGHT, PALETTES};
 use ratatui::widgets::{ScrollbarState, TableState};
 use unicode_width::UnicodeWidthStr;
 use crate::tui::data::{generate_pod_recs, Pod};
+use crate::tui::table_ui::TuiTableState;
 
 #[derive(Clone, Debug)]
 pub struct App {
@@ -13,6 +14,40 @@ pub struct App {
     color_index: usize,
 }
 
+impl TuiTableState for App {
+    type Item = Pod;
+
+    fn get_items(&self) -> &[Self::Item] {
+        &self.items
+    }
+
+    fn get_state(&mut self) -> &mut TableState {
+        &mut self.state
+    }
+
+    fn get_scroll_state(&self) -> &ScrollbarState {
+        &self.scroll_state
+    }
+
+    fn set_scroll_state(&mut self, scroll_state: ScrollbarState) {
+        self.scroll_state = scroll_state;
+    }
+    fn get_table_colors(&self) -> &TableColors {
+        &self.colors
+    }
+
+    fn set_table_colors(&mut self, colors: TableColors) {
+        self.colors = colors;
+    }
+
+    fn get_color_index(&self) -> usize {
+        self.color_index
+    }
+
+    fn set_color_index(&mut self, color_index: usize) {
+        self.color_index = color_index;
+    }
+}
 impl App {
     pub fn new() -> Self {
         let data_vec = generate_pod_recs();
@@ -25,49 +60,14 @@ impl App {
             items: data_vec,
         }
     }
-    pub fn next(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i >= self.items.len() - 1 {
-                    0
-                } else {
-                    i + 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i * ITEM_HEIGHT);
-    }
 
-    pub fn previous(&mut self) {
-        let i = match self.state.selected() {
-            Some(i) => {
-                if i == 0 {
-                    self.items.len() - 1
-                } else {
-                    i - 1
-                }
-            }
-            None => 0,
-        };
-        self.state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i * ITEM_HEIGHT);
-    }
 
-    pub fn next_color(&mut self) {
-        self.color_index = (self.color_index + 1) % PALETTES.len();
-    }
-
-    pub fn set_colors(&mut self) {
-        self.colors = TableColors::new(&PALETTES[self.color_index]);
-    }
 }
 
 
 #[allow(clippy::cast_possible_truncation)]
 fn constraint_len_calculator(items: &[Pod]) -> (u16, u16, u16, u16) {
-    let pod_name_len = items
+    let name_len = items
         .iter()
         .map(Pod::podname)
         .map(UnicodeWidthStr::width)
@@ -94,7 +94,7 @@ fn constraint_len_calculator(items: &[Pod]) -> (u16, u16, u16, u16) {
         .unwrap_or(0);
 
     (
-        pod_name_len as u16,
+        name_len as u16,
         description_len as u16,
         age_len as u16,
         containers_len as u16,
