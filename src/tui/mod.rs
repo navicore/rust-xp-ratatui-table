@@ -1,9 +1,9 @@
 mod container_app;
+mod data;
 mod pod_app;
 mod rs_app;
 mod style;
 mod table_ui;
-mod data;
 
 use std::rc::Rc;
 use std::{error::Error, io};
@@ -14,6 +14,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::prelude::*;
+use crate::tui::table_ui::TuiTableState;
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     // setup terminal
